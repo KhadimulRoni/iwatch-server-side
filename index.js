@@ -26,22 +26,11 @@ async function run() {
       await client.connect();
       // console.log('connected to database');
       const database = client.db('iWatch');
-      const watchCollection = database.collection('exploreWatches');
-      const featuredWatchCollection = database.collection('featuredWatches');
+      const watchesCollection = database.collection('Watches');
+      const usersCollection = database.collection('users');
       const orderCollection = database.collection('orders');
 
       // GET API
-
-      app.get('/exploreWatches', async (req, res) => {
-         const cursor = watchCollection.find({});
-         const exploreWatches = await cursor.toArray();
-         res.send(exploreWatches);
-      });
-      app.get('/featuredWatches', async (req, res) => {
-         const cursor = featuredWatchCollection.find({});
-         const featuredWatches = await cursor.toArray();
-         res.send(featuredWatches);
-      });
 
       // Manage Orders
       app.get('/orders', async (req, res) => {
@@ -51,44 +40,34 @@ async function run() {
       });
 
       // My Orders
-      app.get('/orders/:email', async (req, res) => {
+      app.get('/myOrder/:email', async (req, res) => {
          const cursor = orderCollection.find({});
          const orders = await cursor.toArray();
          res.send(orders);
       });
 
       // Get single service
-      // app.get('/specialTours/:id', async (req, res) => {
-      //    const id = req.params.id;
-      //    console.log('getting special tour', id);
-      //    const query = { _id: ObjectId(id) };
-      //    const specialTour = await specialToursCollection.findOne(query);
-      //    res.json(specialTour);
-      // });
+      app.get('/singleWatch/:id', async (req, res) => {
+         console.log(req.params.id);
+         const result = await watchesCollection
+            .find({ _id: ObjectId(req.params.id) })
+            .toArray();
+         res.json(result[0]);
+         console.log(result);
+      });
 
       // post API
-      // app.post('specialTours', async (req, res) => {
-      //    const specialTour = req.body;
-      //    const result = await specialToursCollection.insertOne(specialTour);
-      //    res.json(result);
-      // });
+      // addServices
 
-      app.post('/exploreWatches', async (req, res) => {
-         const exploreWatch = req.body;
-         console.log('hit the post api', exploreWatch);
-
-         const result = await watchCollection.insertOne(exploreWatch);
-         console.log(result);
-
+      app.post('/addWatches', async (req, res) => {
+         console.log(req.body);
+         const result = await watchesCollection.insertOne(req.body);
          res.json(result);
       });
-      app.post('/featuredWatches', async (req, res) => {
-         const featuredWatch = req.body;
-         console.log('hit the post api', featuredWatch);
 
-         const result = await watchCollection.insertOne(featuredWatch);
-         console.log(result);
-
+      // get all watches
+      app.get('/allWatches', async (req, res) => {
+         const result = await watchesCollection.find({}).toArray();
          res.json(result);
       });
 
