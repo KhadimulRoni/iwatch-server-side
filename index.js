@@ -29,6 +29,7 @@ async function run() {
       const watchesCollection = database.collection('Watches');
       const usersCollection = database.collection('users');
       const orderCollection = database.collection('orders');
+      const reviewCollection = database.collection('review');
 
       // GET API
 
@@ -41,9 +42,45 @@ async function run() {
 
       // My Orders
       app.get('/myOrder/:email', async (req, res) => {
-         const cursor = orderCollection.find({});
-         const orders = await cursor.toArray();
-         res.send(orders);
+         const result = await orderCollection
+            .find({ email: req.params.email })
+            .toArray();
+         res.json(result);
+      });
+
+      // make admin
+      app.put('/users/admin', async (req, res) => {
+         const user = req.body;
+         const filter = { email: user.email };
+         const updateDoc = { $set: { role: 'admin' } };
+         const result = await usersCollection.updateOne(filter, updateDoc);
+         res.json(result);
+      });
+
+      // Admin / not
+      app.get('/users/:email', async (req, res) => {
+         const email = req.params.email;
+         const query = { email: email };
+         const user = await usersCollection.findOne(query);
+         let isAdmin = false;
+         if (user?.role === 'admin') {
+            isAdmin = true;
+         }
+         res.json({ admin: isAdmin });
+      });
+
+      // upsert
+      app.put('/users', async (req, res) => {
+         const user = req.body;
+         const filter = { email: user?.email };
+         const options = { upsert: true };
+         const updateDoc = { $set: user };
+         const result = await usersCollection.updateOne(
+            filter,
+            updateDoc,
+            options
+         );
+         res.json(result);
       });
 
       // Get single service
@@ -54,6 +91,12 @@ async function run() {
             .toArray();
          res.json(result[0]);
          console.log(result);
+      });
+      // Get Reviews
+      app.get('/reviews', async (req, res) => {
+         const cursor = reviewCollection.find({});
+         const reviews = await cursor.toArray();
+         res.send(reviews);
       });
 
       // post API
@@ -70,12 +113,30 @@ async function run() {
          const result = await watchesCollection.find({}).toArray();
          res.json(result);
       });
+      // display watch
+      app.get('/displayWatches', async (req, res) => {
+         const result = await watchesCollection.find({}).limit(6).toArray();
+         res.json(result);
+      });
 
       // Orders API
       app.post('/orders', async (req, res) => {
          const order = req.body;
-
          const result = await orderCollection.insertOne(order);
+         res.json(result);
+      });
+
+      // Reviews
+      app.post('/addReview', async (req, res) => {
+         const review = req.body;
+         const result = await reviewCollection.insertOne(review);
+         res.json(result);
+      });
+
+      // save users
+      app.post('/users', async (req, res) => {
+         const user = req.body;
+         const result = await usersCollection.insertOne(user);
          res.json(result);
       });
    } finally {
