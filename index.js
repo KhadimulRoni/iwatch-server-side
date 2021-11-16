@@ -147,6 +147,25 @@ async function run() {
          res.json(result.acknowledged);
          // console.log(result);
       });
+      app.delete('/deleteProduct/:id', async (req, res) => {
+         const id = req.params.id;
+         const item = { _id: ObjectId(id) };
+         const result = await watchesCollection.deleteOne(item);
+         res.json(result.acknowledged);
+         // console.log(result);
+      });
+      // status update
+      app.put('/statusUpdate/:id', async (req, res) => {
+         const filter = { _id: ObjectId(req.params.id) };
+         console.log(req.params.id);
+         const result = await orderCollection.updateOne(filter, {
+            $set: {
+               status: req.body.status,
+            },
+         });
+         res.send(result);
+         console.log(result);
+      });
    } finally {
       // await client.close();
    }
